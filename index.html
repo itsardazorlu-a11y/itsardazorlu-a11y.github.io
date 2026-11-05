@@ -37,7 +37,7 @@ li small{color:var(--mute);white-space:nowrap;font-size:14px}
 .row{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
 .row:empty{display:none}
 label{display:grid;gap:6px;font-weight:600;font-size:14px;color:var(--mute);width:100%}
-input[type=text],select{font-size:17px;font-family:inherit;padding:12px 14px;border:0;border-radius:12px;background:var(--bg);color:var(--ink);width:100%}
+input[type=text],input[type=password],select{font-size:17px;font-family:inherit;padding:12px 14px;border:0;border-radius:12px;background:var(--bg);color:var(--ink);width:100%}
 .act{display:grid;justify-items:center;margin-top:24px;gap:10px}
 .go{background:var(--acc);color:var(--accink);border:0;border-radius:980px;padding:13px 32px;font-size:17px;font-weight:600;font-family:inherit;cursor:pointer;min-width:200px;transition:opacity .2s,transform .1s}
 .go:active:not(:disabled){transform:scale(.98)}
@@ -47,6 +47,12 @@ input[type=text],select{font-size:17px;font-family:inherit;padding:12px 14px;bor
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .priv{margin:22px 0 0;font-size:13px;color:var(--mute);text-align:center}
 [hidden]{display:none!important}
+.sigbox{display:grid;gap:10px;width:100%}
+.sigbox .seg{display:flex;gap:6px}
+.sigbox .seg button,.sigclr{border:0;background:var(--fill);color:var(--ink);padding:7px 14px;border-radius:980px;font:500 14px inherit;font-family:inherit;cursor:pointer}
+.sigbox .seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.sigbox canvas{width:100%;height:160px;background:#fff;border:1.5px dashed var(--line);border-radius:14px;touch-action:none;cursor:crosshair}
+.sigbox .bot{display:flex;justify-content:space-between;align-items:center;font-weight:400;font-size:13px;color:var(--mute)}
 .bar{background:var(--card);border-bottom:1px solid var(--line);padding:12px 20px}
 .logo{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
 .logo i{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:#E5322D;color:#fff;font-style:normal;font-size:11px;font-weight:800}
@@ -78,7 +84,7 @@ input[type=text],select{font-size:17px;font-family:inherit;padding:12px 14px;bor
   <section id="home">
     <header class="hero">
       <h1>Her PDF aracı tek yerde</h1>
-      <p class="sub">Birleştir, böl, sıkıştır, dönüştür. Dosyaların cihazından çıkmaz.</p>
+      <p class="sub">Birleştir, böl, sıkıştır, dönüştür, imzala, şifrele. Dosyaların cihazından çıkmaz.</p>
     </header>
     <div class="chips" id="chips"></div>
     <div class="grid" id="grid"></div>
@@ -101,7 +107,7 @@ input[type=text],select{font-size:17px;font-family:inherit;padding:12px 14px;bor
       </div>
     </div>
   </section>
-  <p class="priv">İşlem cihazında yapılır. Şifreli PDF’ler desteklenmez. Word/Excel dönüşümü, OCR ve şifreleme bu sürümde yok.</p>
+  <p class="priv">İşlem cihazında yapılır; dosyaların hiçbir sunucuya yüklenmez. OCR, PowerPoint → PDF ve HTML → PDF bu sürümde yok.</p>
 </div>
 <button class="theme" id="theme" aria-label="Koyu / açık mod"></button>
 
@@ -119,12 +125,22 @@ const TOOLS={
  organize:T("Sırala","Bir PDF seç ya da buraya bırak","Sayfaları yeni sıraya diz; yazmadığın sayfalar çıkar","Sırala","siralanmis.pdf",{opts:[{id:"range",label:"Yeni sıra",ph:"örn. 3, 1, 2"}]}),
  rotate:T("Döndür","Bir PDF seç ya da buraya bırak","Sayfaları aynı yönde döndürür","PDF’yi döndür","dondurulmus.pdf",{opts:[{id:"deg",label:"Yön",sel:[["90","90° sağa"],["180","180°"],["270","90° sola"]]},{id:"range",label:"Sayfalar (boşsa hepsi)",ph:"örn. 1-2"}]}),
  numbers:T("Sayfa numarası","Bir PDF seç ya da buraya bırak","Her sayfaya numara ekler","Numaraları ekle","numarali.pdf",{opts:[{id:"pos",label:"Konum",sel:[["c","Alt orta"],["r","Alt sağ"],["l","Alt sol"]]},{id:"start",label:"İlk numara",val:"1"},{id:"fmt",label:"Biçim",sel:[["n","1"],["t","1 / Toplam"]]}]}),
- watermark:T("Filigran","Bir PDF seç ya da buraya bırak","Her sayfaya çapraz metin ekler (Türkçe harfler sadeleşir)","Filigran ekle","filigranli.pdf",{opts:[{id:"wm",label:"Metin",val:"GIZLI"},{id:"op",label:"Koyuluk",sel:[["0.15","Hafif"],["0.3","Orta"],["0.5","Belirgin"]]}]}),
+ watermark:T("Filigran","Bir PDF seç ya da buraya bırak","Her sayfaya çapraz metin ekler","Filigran ekle","filigranli.pdf",{opts:[{id:"wm",label:"Metin",val:"GİZLİ"},{id:"op",label:"Koyuluk",sel:[["0.15","Hafif"],["0.3","Orta"],["0.5","Belirgin"]]}]}),
+ text:T("Metin ekle","Bir PDF seç ya da buraya bırak","Sayfalara istediğin yazıyı ekler","Metni ekle","metinli.pdf",{opts:[{id:"txt",label:"Metin",ph:"örn. Onaylandı – 05.11.2026"},{id:"range",label:"Sayfalar (boşsa hepsi)",ph:"örn. 1, 3-4"},{id:"tpos",label:"Konum",sel:[["tl","Üst sol"],["tc","Üst orta"],["tr","Üst sağ"],["c","Orta"],["bl","Alt sol"],["bc","Alt orta"],["br","Alt sağ"]]},{id:"tsz",label:"Boyut",sel:[["12","12 pt"],["16","16 pt"],["24","24 pt"],["36","36 pt"]]},{id:"tcol",label:"Renk",sel:[["0,0,0","Siyah"],["0.85,0.1,0.1","Kırmızı"],["0.05,0.3,0.8","Mavi"]]}]}),
  crop:T("Kırp","Bir PDF seç ya da buraya bırak","Her sayfanın kenarlarından eşit pay keser","PDF’yi kırp","kirpilmis.pdf",{opts:[{id:"m",label:"Her kenardan kesilecek (pt)",val:"20"}]}),
  img:T("Görselden PDF","JPG ya da PNG seç ya da buraya bırak","Her görsel bir sayfa olur; sırayı oklarla değiştir","PDF oluştur","gorseller.pdf",{accept:".jpg,.jpeg,.png,image/jpeg,image/png",multi:true}),
  pdf2jpg:T("PDF → JPG","Bir PDF seç ya da buraya bırak","Her sayfa bir JPG olur, hepsi ZIP içinde iner","JPG’lere çevir","sayfalar.zip"),
+ pdf2xls:T("PDF → Excel","Bir PDF seç ya da buraya bırak","Tablo ve metinleri satır/sütun olarak .xlsx dosyasına aktarır","Excel’e çevir","tablo.xlsx",{opts:[{id:"mode",label:"Çalışma sayfası",sel:[["each","Her PDF sayfası ayrı çalışma sayfası"],["one","Hepsi tek çalışma sayfasında"]]}]}),
+ xls2pdf:T("Excel → PDF","Excel ya da CSV dosyası seç ya da buraya bırak",".xlsx, .xls, .ods ve .csv; her çalışma sayfası tablo olarak PDF’ye dökülür","PDF’ye çevir","tablo.pdf",{accept:".xlsx,.xls,.xlsm,.ods,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv",ext:/\.(xlsx|xlsm|xls|ods|csv)$/i,opts:[{id:"orient",label:"Sayfa yönü",sel:[["auto","Otomatik"],["p","Dikey"],["l","Yatay"]]},{id:"head",label:"İlk satır",sel:[["1","Başlık (her sayfada tekrarlanır)"],["0","Normal satır"]]}]}),
+ pdf2word:T("PDF → Word","Bir PDF seç ya da buraya bırak","Metni paragraflarıyla düzenlenebilir .docx dosyasına aktarır","Word’e çevir","belge.docx"),
+ word2pdf:T("Word → PDF","Bir Word dosyası (.docx) seç ya da buraya bırak","Başlık, paragraf, liste, tablo ve görseller PDF’ye aktarılır","PDF’ye çevir","belge.pdf",{accept:".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document",ext:/\.docx$/i}),
+ pdf2ppt:T("PDF → PowerPoint","Bir PDF seç ya da buraya bırak","Her sayfa bir slayt olur (.pptx)","PowerPoint’e çevir","sunum.pptx"),
  pdf2txt:T("PDF → Metin","Bir PDF seç ya da buraya bırak","Seçilebilir metni .txt olarak çıkarır","Metni çıkar","metin.txt"),
- compress:T("Sıkıştır","Bir PDF seç ya da buraya bırak","Sayfalar görsele çevrilir; metin seçilemez olur","PDF’yi sıkıştır","sikistirilmis.pdf",{opts:[{id:"q",label:"Kalite",sel:[["1|0.6","Düşük boyut"],["1.5|0.7","Dengeli"],["2|0.8","Yüksek kalite"]]}]})
+ compress:T("Sıkıştır","Bir PDF seç ya da buraya bırak","Sayfalar görsele çevrilir; metin seçilemez olur","PDF’yi sıkıştır","sikistirilmis.pdf",{opts:[{id:"q",label:"Kalite",sel:[["1|0.6","Düşük boyut"],["1.5|0.7","Dengeli"],["2|0.8","Yüksek kalite"]]}]}),
+ repair:T("Onar","Bir PDF seç ya da buraya bırak","Hatalı ya da bozuk PDF’yi yeniden kurmayı dener","PDF’yi onar","onarilmis.pdf"),
+ sign:T("İmzala","Bir PDF seç ya da buraya bırak","İmzanı çiz ya da yaz, sayfaya yerleştir","İmzayı ekle","imzali.pdf",{opts:[{id:"sig",pad:true,label:"İmza"},{id:"spages",label:"Sayfa",sel:[["last","Son sayfa"],["first","İlk sayfa"],["all","Tüm sayfalar"]]},{id:"spos",label:"Konum",sel:[["br","Alt sağ"],["bc","Alt orta"],["bl","Alt sol"],["tr","Üst sağ"]]},{id:"sw",label:"Genişlik",sel:[["170","Orta"],["120","Küçük"],["230","Büyük"]]}]}),
+ protect:T("Şifrele","Bir PDF seç ya da buraya bırak","PDF’yi açmak için parola ister","PDF’yi şifrele","sifreli.pdf",{opts:[{id:"pw",label:"Parola",pw:true},{id:"pw2",label:"Parola (tekrar)",pw:true}]}),
+ unlock:T("Kilidi aç","Bir PDF seç ya da buraya bırak","Parolayı ve kısıtlamaları kaldırır; parolayı bilmen gerekir","Kilidi aç","kilitsiz.pdf",{opts:[{id:"pw",label:"Parola (yalnızca kısıtlama varsa boş bırak)",pw:true}]})
 };
 let tool="merge", files=[], dl=null;
 const $=id=>document.getElementById(id);
@@ -136,11 +152,44 @@ function renderOpts(){
   const o=$("opts");o.innerHTML="";
   for(const f of TOOLS[tool].opts||[]){
     const l=document.createElement("label");l.textContent=f.label;
+    if(f.pad){o.appendChild(sigPad());continue}
     let x;
     if(f.sel){x=document.createElement("select");f.sel.forEach(([v,t])=>{const op=document.createElement("option");op.value=v;op.textContent=t;x.appendChild(op)})}
-    else{x=document.createElement("input");x.type="text";x.placeholder=f.ph||"";x.value=f.val||""}
+    else{x=document.createElement("input");x.type=f.pw?"password":"text";if(f.pw)x.autocomplete="new-password";x.placeholder=f.ph||"";x.value=f.val||""}
     x.id=f.id;l.appendChild(x);o.appendChild(l);
   }
+}
+// İmza alanı: çizim ya da yazı
+let sig={mode:"draw",ink:false};
+function sigPad(){
+  sig={mode:"draw",ink:false};
+  const box=document.createElement("div");box.className="sigbox";
+  box.innerHTML='<div class="seg"><button type="button" data-m="draw" aria-pressed="true">Çiz</button><button type="button" data-m="type" aria-pressed="false">Yaz</button></div><canvas id="sigc" aria-label="İmza alanı"></canvas><input type="text" id="sigt" placeholder="Adını yaz" hidden><div class="bot"><span id="sigh">Fareyle ya da parmağınla imzala</span><button type="button" class="sigclr">Temizle</button></div>';
+  const c=box.querySelector("canvas"),t=box.querySelector("#sigt"),ctx=()=>c.getContext("2d");
+  const setup=()=>{const r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=Math.max(1,r.width*d);c.height=Math.max(1,r.height*d);const x=ctx();x.setTransform(d,0,0,d,0,0);x.lineWidth=2.6;x.lineCap=x.lineJoin="round";x.strokeStyle="#10204a";sig.ink=false;if(sig.mode==="type")typed()};
+  const typed=()=>{const r=c.getBoundingClientRect(),x=ctx();x.clearRect(0,0,r.width,r.height);const v=t.value.trim();sig.ink=!!v;if(!v)return;
+    let fs=64;x.fillStyle="#10204a";do{x.font="italic "+fs+"px 'Segoe Script','Brush Script MT','Snell Roundhand','Apple Chancery',cursive";fs-=2}while(x.measureText(v).width>r.width-30&&fs>14);
+    x.textBaseline="middle";x.textAlign="center";x.fillText(v,r.width/2,r.height/2)};
+  let last=null;
+  const pt=e=>{const r=c.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
+  c.onpointerdown=e=>{if(sig.mode!=="draw")return;c.setPointerCapture(e.pointerId);last=pt(e);const x=ctx();x.beginPath();x.arc(last[0],last[1],1.3,0,7);x.fillStyle="#10204a";x.fill();sig.ink=true};
+  c.onpointermove=e=>{if(!last)return;const p=pt(e),x=ctx();x.beginPath();x.moveTo(...last);x.lineTo(...p);x.stroke();last=p};
+  c.onpointerup=c.onpointercancel=()=>last=null;
+  t.oninput=typed;
+  box.querySelector(".sigclr").onclick=()=>{t.value="";setup()};
+  box.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{sig.mode=b.dataset.m;box.querySelectorAll(".seg button").forEach(z=>z.setAttribute("aria-pressed",z===b));t.hidden=sig.mode!=="type";box.querySelector("#sigh").textContent=sig.mode==="type"?"Yazdığın ad el yazısı olarak eklenir":"Fareyle ya da parmağınla imzala";setup();if(!t.hidden)t.focus()});
+  requestAnimationFrame(setup);
+  return box;
+}
+// İmzayı kenar boşluklarından kırpıp PNG olarak verir
+async function sigPNG(){
+  const c=$("sigc");if(!c||!sig.ink)throw new Error("Önce imzanı çiz ya da adını yaz.");
+  const d=c.getContext("2d").getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=-1,y1=-1;
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(d[(y*c.width+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0)throw new Error("Önce imzanı çiz ya da adını yaz.");
+  const pad=6,o=document.createElement("canvas");x0=Math.max(0,x0-pad);y0=Math.max(0,y0-pad);x1=Math.min(c.width-1,x1+pad);y1=Math.min(c.height-1,y1+pad);
+  o.width=x1-x0+1;o.height=y1-y0+1;o.getContext("2d").drawImage(c,x0,y0,o.width,o.height,0,0,o.width,o.height);
+  return new Uint8Array(await (await new Promise(r=>o.toBlob(r,"image/png"))).arrayBuffer());
 }
 function renderList(){
   const ul=$("list");ul.innerHTML="";
@@ -170,7 +219,7 @@ function render(){
   $("go").textContent=t.go;renderList();
 }
 function add(list){
-  const ok=[...list].filter(f=>tool==="img"?/^image\/(jpeg|png)$/.test(f.type):(f.type==="application/pdf"||/\.pdf$/i.test(f.name)));
+  const ok=[...list].filter(f=>tool==="img"?/^image\/(jpeg|png)$/.test(f.type):TOOLS[tool].ext?TOOLS[tool].ext.test(f.name):(f.type==="application/pdf"||/\.pdf$/i.test(f.name)));
   if(!ok.length){msg("Bu araç için uygun dosya türü seçilmedi.",true);return}
   files=TOOLS[tool].multi?files.concat(ok):[ok[0]];
   msg("");renderList();
@@ -198,10 +247,9 @@ function parseRange(s,max,optional){
 }
 const buf=f=>f.arrayBuffer();
 const load=async f=>PDFDocument.load(await buf(f));
-const ascii=t=>t.replace(/[çÇğĞıİöÖşŞüÜ]/g,c=>({"ç":"c","Ç":"C","ğ":"g","Ğ":"G","ı":"i","İ":"I","ö":"o","Ö":"O","ş":"s","Ş":"S","ü":"u","Ü":"U"}[c])).replace(/[^\x20-\x7E]/g,"");
 const base=f=>f.name.replace(/\.[^.]+$/,"");
 
-function loadScript(u){return new Promise((ok,no)=>{const s=document.createElement("script");s.src=u;s.onload=ok;s.onerror=()=>no(new Error("PDF okuyucu yüklenemedi. İnternet bağlantını kontrol et."));document.head.appendChild(s)})}
+function loadScript(u){return new Promise((ok,no)=>{const s=document.createElement("script");s.src=u;s.onload=ok;s.onerror=()=>no(new Error("Gerekli bileşen yüklenemedi. İnternet bağlantını kontrol et."));document.head.appendChild(s)})}
 async function pdfjs(f){
   if(!window.pdfjsLib){await loadScript(PJ+"pdf.min.js");pdfjsLib.GlobalWorkerOptions.workerSrc=PJ+"pdf.worker.min.js"}
   return pdfjsLib.getDocument({data:new Uint8Array(await buf(f))}).promise;
@@ -213,10 +261,262 @@ async function renderPage(doc,n,scale){
   await pg.render({canvasContext:ctx,viewport:vp,canvas:c}).promise;
   const v1=pg.getViewport({scale:1});return {c,w:v1.width,h:v1.height};
 }
+const XLSXJS="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+const FKJS="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js";
+const FONT="https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/hinted/ttf/NotoSans-";
+const need=async(g,u)=>{if(!window[g])await loadScript(u)};
+const fontCache={};
+const getFont=w=>fontCache[w]||(fontCache[w]=fetch(FONT+w+".ttf").then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).catch(()=>{delete fontCache[w];throw new Error("Yazı tipi yüklenemedi. İnternet bağlantını kontrol et.")}));
+
+// "12", "-3,5", "1.234,56", "12.5" gibi değerleri sayıya çevirir; belirsizleri metin bırakır
+function num(s){
+  const t=s.replace(/\s+/g,"");
+  if(/^-?\d{1,15}$/.test(t))return t.length>1&&/^-?0/.test(t)?s:+t;
+  if(/^-?\d+,\d+$/.test(t))return +t.replace(",",".");
+  if(/^-?\d{1,3}(\.\d{3})+,\d+$/.test(t))return +t.replace(/\./g,"").replace(",",".");
+  if(/^-?\d{1,3}(,\d{3})+\.\d+$/.test(t))return +t.replace(/,/g,"");
+  if(/^-?\d+\.\d+$/.test(t)&&!/^-?\d{1,3}\.\d{3}$/.test(t))return +t;
+  return s;
+}
+// Bir PDF sayfasındaki metin parçalarını konumlarına göre satır/sütun ızgarasına dizer
+async function pageRows(pg){
+  const vp=pg.getViewport({scale:1}),tc=await pg.getTextContent();
+  const it=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>{const m=pdfjsLib.Util.transform(vp.transform,i.transform),h=Math.hypot(m[2],m[3])||10;return {s:i.str,x:m[4],y:m[5],w:i.width||i.str.length*h*.5,h}});
+  it.sort((a,b)=>a.y-b.y||a.x-b.x);
+  const rows=[];
+  for(const i of it){const r=rows[rows.length-1];if(r&&Math.abs(i.y-r.y)<Math.min(i.h,r.h)*.5)r.it.push(i);else rows.push({y:i.y,h:i.h,it:[i]})}
+  return rows.map(r=>{
+    r.it.sort((a,b)=>a.x-b.x);const cells=[];
+    for(const i of r.it){const c=cells[cells.length-1],gap=c?i.x-c.x1:0;
+      if(c&&gap<i.h*.5){c.s+=(gap>i.h*.12&&!/\s$/.test(c.s)&&!/^\s/.test(i.s)?" ":"")+i.s;c.x1=Math.max(c.x1,i.x+i.w)}
+      else cells.push({s:i.s,x0:i.x,x1:i.x+i.w})}
+    cells.forEach(c=>c.s=c.s.replace(/\s+/g," ").trim());return {y:r.y,h:r.h,cells:cells.filter(c=>c.s)};
+  }).filter(r=>r.cells.length);
+}
+async function pageGrid(pg){
+  const cr=(await pageRows(pg)).map(r=>r.cells);
+  let iv=[];
+  cr.filter(c=>c.length>1).flat().map(c=>[c.x0,c.x1]).sort((a,b)=>a[0]-b[0]).forEach(([a,b])=>{const l=iv[iv.length-1];if(l&&a<=l[1]+2)l[1]=Math.max(l[1],b);else iv.push([a,b])});
+  if(!iv.length)iv=[[-Infinity,Infinity]];
+  const col=c=>{let best=0,bs=-Infinity;iv.forEach(([a,b],k)=>{const ov=Math.min(b,c.x1)-Math.max(a,c.x0),sc=ov>0?ov:-Math.min(Math.abs(a-c.x0),Math.abs(b-c.x1));if(sc>bs){bs=sc;best=k}});return best};
+  // Hiçbir satırda yan yana dolu olmayan komşu sütunları birleştir (sağa/sola hizalı sütunlar için)
+  const ks=cr.map(cells=>cells.map(col)),occ=iv.map((_,k)=>new Set(ks.flatMap((r,i)=>r.includes(k)?[i]:[]))),map=[];let g=-1,cur=null;
+  occ.forEach((o,k)=>{if(cur&&[...o].every(i=>!cur.has(i)))o.forEach(i=>cur.add(i));else{g++;cur=new Set(o)}map[k]=g});
+  return cr.map((cells,ri)=>{const row=[];cells.forEach((c,j)=>{const k=map[ks[ri][j]];row[k]=row[k]==null?c.s:row[k]+" "+c.s});for(let k=0;k<row.length;k++)if(row[k]==null)row[k]="";return row.map(v=>v===""?v:num(v))});
+}
+async function pdf2xls(f){
+  const doc=await pdfjs(f),n=doc.numPages;await need("XLSX",XLSXJS);
+  const wb=XLSX.utils.book_new(),one=val("mode")==="one",all=[];let any=false;
+  for(let i=1;i<=n;i++){msg("Sayfa "+i+"/"+n+"…");const g=await pageGrid(await doc.getPage(i));if(g.length)any=true;
+    if(one){if(all.length&&g.length)all.push([]);all.push(...g)}
+    else XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(g.length?g:[[""]]),"Sayfa "+i)}
+  if(!any)throw new Error("Metin bulunamadı. Bu PDF taranmış görsellerden oluşuyor olabilir; OCR bu sürümde yok.");
+  if(one)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(all),"PDF");
+  for(const name of wb.SheetNames){const ws=wb.Sheets[name],ref=ws["!ref"];if(!ref)continue;const R=XLSX.utils.decode_range(ref),w=[];
+    for(let r=R.s.r;r<=R.e.r;r++)for(let c=R.s.c;c<=R.e.c;c++){const x=ws[XLSX.utils.encode_cell({r,c})];if(x)w[c]=Math.max(w[c]||8,Math.min(60,String(x.v).length+2))}
+    ws["!cols"]=Array.from(w,v=>({wch:v||8}))}
+  const data=XLSX.write(wb,{bookType:"xlsx",type:"array"});
+  return {data:new Blob([data],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),name:base(f)+".xlsx",note:" · Karmaşık düzenlerde sütunları kontrol et"};
+}
+async function xls2pdf(f){
+  await Promise.all([need("XLSX",XLSXJS),need("fontkit",FKJS)]);
+  let wb;try{wb=XLSX.read(await buf(f),{type:"array"})}catch(e){throw new Error("Dosya okunamadı. Bozuk ya da şifreli olabilir.")}
+  const doc=await PDFDocument.create();doc.registerFontkit(fontkit);
+  const [fr,fb]=await Promise.all([getFont("Regular"),getFont("Bold")]);
+  const font=await doc.embedFont(fr,{subset:true}),bold=await doc.embedFont(fb,{subset:true});
+  const M=30,head=val("head")==="1",multi=wb.SheetNames.length>1,line=rgb(.75,.75,.78);
+  const clean=t=>String(t).replace(/\s+/g," ").trim();
+  for(const name of wb.SheetNames){
+    const ws=wb.Sheets[name],ref=ws["!ref"];if(!ref)continue;
+    const R=XLSX.utils.decode_range(ref),rows=[];
+    for(let r=R.s.r;r<=R.e.r;r++){const row=[];for(let c=R.s.c;c<=R.e.c;c++){const x=ws[XLSX.utils.encode_cell({r,c})];
+      row.push(x?{s:clean(x.w!=null?x.w:x.v!=null?x.v:""),n:x.t==="n"}:{s:"",n:false})}rows.push(row)}
+    while(rows.length&&rows[rows.length-1].every(c=>!c.s))rows.pop();
+    for(;rows.length&&rows[0].length;){if(rows.some(r=>r[r.length-1].s))break;rows.forEach(r=>r.pop())}
+    if(!rows.length||!rows[0].length)continue;
+    const nc=rows[0].length,PAD=4;let fs=9;
+    let w=Array.from({length:nc},(_,c)=>Math.min(220,Math.max(24,...rows.map((r,i)=>(i===0&&head?bold:font).widthOfTextAtSize(r[c].s,fs)+2*PAD+1.5))));
+    const sum=w.reduce((a,b)=>a+b,0),o=val("orient"),land=o==="l"||(o==="auto"&&sum>595.28-2*M);
+    const PW=land?841.89:595.28,PH=land?595.28:841.89,U=PW-2*M;
+    if(sum>U){const k=Math.max(U/sum,6/9);fs*=k;w=w.map(v=>v*k);const s2=w.reduce((a,b)=>a+b,0);if(s2>U)w=w.map(v=>v*U/s2)}
+    const rh=fs*1.7,fit=(t,ft,mw)=>{if(ft.widthOfTextAtSize(t,fs)<=mw)return t;while(t&&ft.widthOfTextAtSize(t+"…",fs)>mw)t=t.slice(0,-1);return t?t+"…":""};
+    let pg,y;
+    const drawRow=(row,isHead)=>{
+      let x=M;const ft=isHead?bold:font;
+      if(isHead)pg.drawRectangle({x:M,y:y-rh,width:w.reduce((a,b)=>a+b,0),height:rh,color:rgb(.93,.94,.96)});
+      row.forEach((c,j)=>{pg.drawRectangle({x,y:y-rh,width:w[j],height:rh,borderColor:line,borderWidth:.5});
+        const t=fit(c.s,ft,w[j]-2*PAD);if(t){const tw=ft.widthOfTextAtSize(t,fs);pg.drawText(t,{x:c.n&&!isHead?x+w[j]-PAD-tw:x+PAD,y:y-rh+(rh-fs*.72)/2,size:fs,font:ft,color:rgb(.1,.1,.12)})}
+        x+=w[j]});
+      y-=rh;
+    };
+    const newPage=first=>{pg=doc.addPage([PW,PH]);y=PH-M;
+      if(multi){pg.drawText(fit(clean(name)+(first?"":" (devam)"),bold,U),{x:M,y:y-11,size:11,font:bold});y-=22}
+      if(head&&!first)drawRow(rows[0],true)};
+    newPage(true);
+    rows.forEach((r,i)=>{if(y-rh<M)newPage(false);drawRow(r,head&&i===0)});
+  }
+  if(!doc.getPageCount())throw new Error("Dosyada dökülecek veri bulunamadı.");
+  return {data:await doc.save(),name:base(f)+".pdf"};
+}
+const MAMMOTH="https://cdn.jsdelivr.net/npm/mammoth@1.11.0/mammoth.browser.min.js";
+const PPTX="https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
+const CANTOO="https://cdn.jsdelivr.net/npm/@cantoo/pdf-lib@2.5.3/dist/pdf-lib.min.js";
+async function noto(doc,w){await need("fontkit",FKJS);doc.registerFontkit(fontkit);return doc.embedFont(await getFont(w),{subset:true})}
+const xesc=t=>t.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g,"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+// PDF → Word: satırları paragraflara toplar, büyük yazıları başlık yapar
+async function pdf2word(f){
+  const doc=await pdfjs(f),n=doc.numPages,body=[];let any=false;
+  const para=(t,sz,bold,ind)=>'<w:p><w:pPr><w:spacing w:after="'+(bold?120:160)+'"/>'+(ind>0?'<w:ind w:left="'+ind+'"/>':'')+(bold?'<w:keepNext/>':'')+'</w:pPr><w:r><w:rPr>'+(bold?'<w:b/>':'')+'<w:sz w:val="'+sz+'"/><w:szCs w:val="'+sz+'"/></w:rPr>'+t.split("\t").map(x=>'<w:t xml:space="preserve">'+xesc(x)+'</w:t>').join('<w:tab/>')+'</w:r></w:p>';
+  for(let i=1;i<=n;i++){
+    msg("Sayfa "+i+"/"+n+"…");
+    const rows=await pageRows(await doc.getPage(i));if(!rows.length)continue;any=true;
+    const hs=rows.map(r=>r.h).sort((a,b)=>a-b),med=hs[hs.length>>1],left=Math.min(...rows.map(r=>r.cells[0].x0));
+    if(body.length)body.push('<w:p><w:r><w:br w:type="page"/></w:r></w:p>');
+    let cur=null;
+    const flush=()=>{if(!cur)return;const head=cur.h>med*1.2;body.push(para(cur.t,Math.round(Math.min(48,Math.max(16,head?cur.h*2:Math.min(24,cur.h*2)))),head,Math.round(Math.max(0,cur.x-left)*20)));cur=null};
+    let prev=null;
+    for(const r of rows){
+      const t=r.cells.map(c=>c.s).join("\t"),x=r.cells[0].x0,multi=r.cells.length>1;
+      const join=cur&&!multi&&!cur.multi&&prev&&Math.abs(r.h-cur.h)<cur.h*.15&&r.y-prev.y<r.h*1.75&&!/^([•\-–·▪◦*]|\d+[.)])\s/.test(t)&&Math.abs(x-cur.x)<r.h*3;
+      if(join)cur.t=/[-‐]$/.test(cur.t)&&/^[a-zçğıöşü]/.test(t)?cur.t.slice(0,-1)+t:cur.t+" "+t;
+      else{flush();cur={t,h:r.h,x,multi}}
+      prev=r;
+    }
+    flush();
+  }
+  if(!any)throw new Error("Metin bulunamadı. Bu PDF taranmış görsellerden oluşuyor olabilir; OCR bu sürümde yok.");
+  const zip=new JSZip(),W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  zip.file("[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>');
+  zip.file("_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  zip.file("word/_rels/document.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+  zip.file("word/styles.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles '+W+'><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri" w:eastAsia="Calibri"/><w:sz w:val="22"/><w:lang w:val="tr-TR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults></w:styles>');
+  zip.file("word/document.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+W+'><w:body>'+body.join("")+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>');
+  return {data:await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}),name:base(f)+".docx",note:" · Metin aktarıldı; görseller ve özel düzen aktarılmaz"};
+}
+
+// Word → PDF: mammoth ile HTML'e çevirip satır kırarak dizer
+async function word2pdf(f){
+  await need("mammoth",MAMMOTH);
+  let html;try{html=(await mammoth.convertToHtml({arrayBuffer:await buf(f)})).value}catch(e){throw new Error("Word dosyası okunamadı. Yalnızca .docx desteklenir (eski .doc değil).")}
+  const dom=new DOMParser().parseFromString("<div>"+html+"</div>","text/html").body.firstChild;
+  const doc=await PDFDocument.create();
+  const F={r:await noto(doc,"Regular"),b:await noto(doc,"Bold"),i:await noto(doc,"Italic"),bi:await noto(doc,"BoldItalic")};
+  const fo=st=>st.b&&st.i?F.bi:st.b?F.b:st.i?F.i:F.r;
+  const PW=595.28,PH=841.89,M=56,U=PW-2*M,ink=rgb(.1,.1,.12);let pg,y;
+  const newPage=()=>{pg=doc.addPage([PW,PH]);y=PH-M};newPage();
+  const room=h=>{if(y-h<M)newPage()};
+  // satır içi parçaları (metin + biçim) topla
+  const runs=(node,st={},out=[])=>{for(const c of node.childNodes){
+    if(c.nodeType===3)out.push({t:c.textContent.replace(/\s+/g," "),st});
+    else if(c.nodeType===1){const tg=c.tagName;
+      if(tg==="BR")out.push({br:true});
+      else if(tg==="IMG")out.push({img:c.getAttribute("src")});
+      else if(tg==="UL"||tg==="OL"||tg==="TABLE")continue;
+      else runs(c,{b:st.b||tg==="STRONG"||tg==="B"||/^H\d$/.test(tg),i:st.i||tg==="EM"||tg==="I",u:st.u||tg==="A"},out)}}return out};
+  // parçaları kelimelere bölüp satırlara diz
+  const layout=(rs,size,width)=>{const lines=[];let line=[],lw=0;
+    const push=()=>{lines.push({w:line,h:size*1.45});line=[];lw=0};
+    for(const r of rs){
+      if(r.br){push();continue}if(r.img){if(line.length)push();lines.push({img:r.img});continue}
+      for(const tok of r.t.split(/(\s+)/)){if(!tok)continue;const ft=fo(r.st),sp=/^\s+$/.test(tok);
+        if(sp&&!line.length)continue;const tw=ft.widthOfTextAtSize(sp?" ":tok,size);
+        if(!sp&&lw+tw>width&&line.length){while(line.length&&line[line.length-1].sp)lw-=line.pop().w;push()}
+        if(!sp&&tw>width){let part="";for(const ch of tok){if(ft.widthOfTextAtSize(part+ch,size)>width-lw&&part){line.push({t:part,ft,w:ft.widthOfTextAtSize(part,size),st:r.st});push();part=""}part+=ch}if(part){const pw=ft.widthOfTextAtSize(part,size);line.push({t:part,ft,w:pw,st:r.st});lw+=pw}continue}
+        line.push({t:sp?" ":tok,ft,w:tw,st:r.st,sp});lw+=tw}}
+    if(line.length)push();return lines};
+  // aynı biçimdeki ardışık kelimeleri tek parça çiz (kopyalanan metin düzgün çıksın)
+  const merge=ws=>{const out=[];for(const wd of ws){const l=out[out.length-1];if(l&&l.ft===wd.ft&&!!l.st.u===!!wd.st.u){l.t+=wd.t;l.w+=wd.w}else out.push({t:wd.t,ft:wd.ft,w:wd.w,st:wd.st})}
+    return out};
+  const drawImg=async src=>{const m=/^data:image\/(png|jpe?g);base64,(.*)$/i.exec(src||"");if(!m)return;
+    const bytes=Uint8Array.from(atob(m[2]),c=>c.charCodeAt(0));let im;try{im=m[1].toLowerCase()==="png"?await doc.embedPng(bytes):await doc.embedJpg(bytes)}catch(e){return}
+    let w=Math.min(U,im.width*.75),h=w*im.height/im.width;if(h>PH-2*M){h=PH-2*M;w=h*im.width/im.height}room(h+6);pg.drawImage(im,{x:M,y:y-h,width:w,height:h});y-=h+6};
+  const drawLines=async(lines,size,x0,width,prefix)=>{let first=true;
+    for(const l of lines){if(l.img){await drawImg(l.img);continue}
+      room(l.h);let x=x0;const base=y-size*1.1;
+      if(first&&prefix){const pw=F.r.widthOfTextAtSize(prefix,size);pg.drawText(prefix,{x:x0-pw-6,y:base,size,font:F.r,color:ink})}
+      for(const g of merge(l.w)){pg.drawText(g.t,{x,y:base,size,font:g.ft,color:g.st.u?rgb(.05,.3,.8):ink});
+        if(g.st.u)pg.drawLine({start:{x,y:base-1.5},end:{x:x+g.w,y:base-1.5},thickness:.5,color:rgb(.05,.3,.8)});x+=g.w}
+      y-=l.h;first=false}};
+  const HS={H1:22,H2:18,H3:15,H4:13,H5:12,H6:11};
+  const table=async tb=>{const trs=[...tb.querySelectorAll("tr")];if(!trs.length)return;
+    const grid=trs.map(tr=>[...tr.children].filter(c=>/^T[DH]$/.test(c.tagName)));const nc=Math.max(...grid.map(r=>r.length));if(!nc)return;
+    const size=9.5,P=4,cw=U/nc;
+    for(const r of grid){const cells=r.map(c=>layout(runs(c,{b:c.tagName==="TH"}),size,cw*(+c.getAttribute("colspan")||1)-2*P).filter(l=>!l.img));
+      const rh=Math.max(size*1.45,...cells.map(ls=>ls.reduce((a,l)=>a+l.h,0)))+2*P;room(rh);let x=M;
+      r.forEach((c,j)=>{const span=Math.min(+c.getAttribute("colspan")||1,nc),w=cw*span;
+        pg.drawRectangle({x,y:y-rh,width:w,height:rh,borderColor:rgb(.7,.7,.73),borderWidth:.5,color:c.tagName==="TH"?rgb(.93,.94,.96):undefined});
+        let yy=y-P;for(const l of cells[j]){let xx=x+P;for(const g of merge(l.w)){pg.drawText(g.t,{x:xx,y:yy-size*1.1,size,font:g.ft,color:ink});xx+=g.w}yy-=l.h}x+=w});
+      y-=rh}y-=8};
+  const list=async(el,depth)=>{let k=0;for(const li of el.children){if(li.tagName!=="LI")continue;k++;
+    const x0=M+18*(depth+1),pre=el.tagName==="OL"?k+".":"•";
+    await drawLines(layout(runs(li),11,U-18*(depth+1)),11,x0,0,pre);y-=3;
+    for(const sub of li.children)if(sub.tagName==="UL"||sub.tagName==="OL")await list(sub,depth+1)}};
+  const blocks=async el=>{for(const c of el.childNodes){
+    if(c.nodeType===3){if(c.textContent.trim())await drawLines(layout([{t:c.textContent,st:{}}],11,U),11,M);continue}
+    if(c.nodeType!==1)continue;const tg=c.tagName;
+    if(HS[tg]){y-=HS[tg]*.5;room(HS[tg]*3);await drawLines(layout(runs(c),HS[tg],U),HS[tg],M);y-=4}
+    else if(tg==="UL"||tg==="OL"){await list(c,0);y-=6}
+    else if(tg==="TABLE")await table(c);
+    else if(tg==="P"||tg==="LI"){const rs=runs(c);if(rs.some(r=>r.img||r.br||(r.t&&r.t.trim()))){await drawLines(layout(rs,11,U),11,M);y-=7}else y-=11*1.45}
+    else await blocks(c)}};
+  await blocks(dom);
+  return {data:await doc.save(),name:base(f)+".pdf",note:html.trim()?"":" · Belge boş görünüyor"};
+}
+
+// PDF → PowerPoint: her sayfa görüntü olarak bir slayta yerleşir
+async function pdf2ppt(f){
+  const doc=await pdfjs(f),n=doc.numPages;await need("PptxGenJS",PPTX);
+  const p0=(await doc.getPage(1)).getViewport({scale:1}),W=10,H=W*p0.height/p0.width;
+  const ppt=new PptxGenJS();ppt.defineLayout({name:"PDF",width:W,height:H});ppt.layout="PDF";
+  for(let i=1;i<=n;i++){msg("Sayfa "+i+"/"+n+"…");const {c,w,h}=await renderPage(doc,i,2),r=Math.min(W/(w/72),H/(h/72)),iw=w/72*r,ih=h/72*r;
+    const url=await new Promise(ok=>{const fr=new FileReader();jpeg(c,.88).then(b=>{fr.onload=()=>ok(fr.result);fr.readAsDataURL(b)})});
+    ppt.addSlide().addImage({data:url,x:(W-iw)/2,y:(H-ih)/2,w:iw,h:ih})}
+  const data=await ppt.write({outputType:"blob"});
+  return {data:new Blob([data],{type:"application/vnd.openxmlformats-officedocument.presentationml.presentation"}),name:base(f)+".pptx",note:" · Slaytlar sayfa görüntüsüdür"};
+}
+
+// Şifrele / Kilidi aç: şifrelemeyi destekleyen pdf-lib sürümü ayrı yüklenir
+let CL=null;
+async function cantoo(){if(CL)return CL;const keep=window.PDFLib;try{window.PDFLib=undefined;await loadScript(CANTOO);CL=window.PDFLib}finally{window.PDFLib=keep}if(!CL)throw new Error("Şifreleme bileşeni yüklenemedi.");return CL}
+async function security(f){
+  const L=await cantoo(),bytes=await buf(f),pw=val("pw");
+  if(tool==="protect"){
+    if(pw.length<4)throw new Error("Parola en az 4 karakter olmalı.");
+    if(pw!==val("pw2"))throw new Error("Parolalar eşleşmiyor.");
+    let d;try{d=await L.PDFDocument.load(bytes)}catch(e){if(/encrypt/i.test(e.message||""))throw new Error("Bu PDF zaten şifreli. Önce “Kilidi aç” aracını kullan.");throw e}
+    d.encrypt({userPassword:pw,ownerPassword:pw,permissions:{printing:"highResolution",modifying:true,copying:true,annotating:true,fillingForms:true,contentAccessibility:true,documentAssembly:true}});
+    return {data:await d.save(),name:base(f)+"-sifreli.pdf",note:" · Parolanı unutma; kurtarılamaz"};
+  }
+  try{await L.PDFDocument.load(bytes);throw Object.assign(new Error("Bu PDF şifreli değil; kaldırılacak bir kilit yok."),{plain:true})}catch(e){if(e.plain)throw e;if(!/encrypt/i.test(e.message||""))throw e}
+  let d;try{d=await L.PDFDocument.load(bytes,{password:pw})}catch(e){throw new Error(/password/i.test(e.message||"")?(pw?"Parola yanlış.":"Bu PDF açılış parolası istiyor; parolayı gir."):"PDF açılamadı: "+e.message)}
+  return {data:await d.save(),name:base(f)+"-kilitsiz.pdf"};
+}
+
+// Onar: önce yapıyı yeniden kurar, olmazsa sayfaları görüntü olarak yeniden oluşturur
+async function repair(f){
+  const bytes=await buf(f);
+  try{const src=await PDFDocument.load(bytes,{throwOnInvalidObject:false,updateMetadata:false});const n=src.getPageCount();if(!n)throw 0;
+    const out=await PDFDocument.create();(await out.copyPages(src,src.getPageIndices())).forEach(p=>out.addPage(p));
+    return {data:await out.save(),name:base(f)+"-onarilmis.pdf",note:" · Yapı yeniden kuruldu ("+n+" sayfa)"}}
+  catch(e){if(e&&/encrypt/i.test(e.message||""))throw e}
+  let doc;try{doc=await pdfjs(f)}catch(e){if(e&&e.name==="PasswordException")throw e;throw new Error("PDF onarılamadı; dosya çok hasarlı.")}
+  const out=await PDFDocument.create();let ok=0;
+  for(let i=1;i<=doc.numPages;i++){msg("Sayfa "+i+"/"+doc.numPages+"…");try{const {c,w,h}=await renderPage(doc,i,2),img=await out.embedJpg(await (await jpeg(c,.85)).arrayBuffer());out.addPage([w,h]).drawImage(img,{x:0,y:0,width:w,height:h});ok++}catch(e){}}
+  if(!ok)throw new Error("PDF onarılamadı; dosya çok hasarlı.");
+  return {data:await out.save(),name:base(f)+"-onarilmis.pdf",note:" · "+ok+" sayfa görüntü olarak kurtarıldı; metin seçilemez"};
+}
 const jpeg=(c,q)=>new Promise(r=>c.toBlob(r,"image/jpeg",q));
 
 async function run(){
   const f=files[0];
+  if(tool==="xls2pdf")return xls2pdf(f);
+  if(tool==="pdf2word")return pdf2word(f);
+  if(tool==="word2pdf")return word2pdf(f);
+  if(tool==="pdf2ppt")return pdf2ppt(f);
+  if(tool==="protect"||tool==="unlock")return security(f);
+  if(tool==="repair")return repair(f);
+  if(tool==="pdf2xls")return pdf2xls(f);
   if(tool==="merge"||tool==="img"){
     const out=await PDFDocument.create();
     for(const x of files){
@@ -234,7 +534,7 @@ async function run(){
     (await out.copyPages(src,idx)).forEach(p=>out.addPage(p));
     return {data:await out.save()};
   }
-  if(["rotate","numbers","watermark","crop"].includes(tool)){
+  if(["rotate","numbers","watermark","crop","text","sign"].includes(tool)){
     const doc=await load(f),pages=doc.getPages(),n=pages.length;
     if(tool==="rotate"){const d=+val("deg");parseRange(val("range"),n,true).forEach(i=>pages[i].setRotation(degrees((pages[i].getRotation().angle+d)%360)))}
     if(tool==="numbers"){
@@ -243,10 +543,23 @@ async function run(){
         p.drawText(t,{x:pos==="l"?36:pos==="r"?width-36-w:(width-w)/2,y:24,size:11,font,color:rgb(.2,.2,.2)})});
     }
     if(tool==="watermark"){
-      const t=ascii(val("wm")).trim();if(!t)throw new Error("Filigran metni boş kalamaz (yalnızca Latin harfleri).");
-      const font=await doc.embedFont(StandardFonts.HelveticaBold),op=+val("op"),a=Math.PI/4;
+      const t=val("wm").replace(/\s+/g," ").trim();if(!t)throw new Error("Filigran metni boş kalamaz.");
+      const font=await noto(doc,"Bold"),op=+val("op"),a=Math.PI/4;
       pages.forEach(p=>{const {width,height}=p.getSize(),sz=Math.min(90,width*.7/font.widthOfTextAtSize(t,1)),tw=font.widthOfTextAtSize(t,sz),th=sz*.35;
         p.drawText(t,{x:width/2-tw/2*Math.cos(a)+th*Math.sin(a),y:height/2-tw/2*Math.sin(a)-th*Math.cos(a),size:sz,font,rotate:degrees(45),color:rgb(.5,.5,.5),opacity:op})});
+    }
+    if(tool==="text"){
+      const t=val("txt").replace(/\s+/g," ").trim();if(!t)throw new Error("Eklenecek metni yaz.");
+      const font=await noto(doc,"Regular"),sz=+val("tsz"),pos=val("tpos"),[r,g,b]=val("tcol").split(",").map(Number),M=36;
+      parseRange(val("range"),n,true).forEach(i=>{const p=pages[i],{width,height}=p.getSize(),w=font.widthOfTextAtSize(t,sz);
+        const x=pos[1]==="l"?M:pos[1]==="r"?width-M-w:(width-w)/2,y=pos[0]==="t"?height-M-sz:pos[0]==="b"?M:(height-sz)/2;
+        p.drawText(t,{x,y,size:sz,font,color:rgb(r,g,b)})});
+    }
+    if(tool==="sign"){
+      const png=await doc.embedPng(await sigPNG()),sw=+val("sw"),sp=val("spages"),pos=val("spos"),M=36;
+      const idx=sp==="all"?pages.map((_,i)=>i):[sp==="first"?0:n-1];
+      idx.forEach(i=>{const p=pages[i],{width,height}=p.getSize(),w=Math.min(sw,width-2*M),h=w*png.height/png.width;
+        p.drawImage(png,{x:pos[1]==="l"?M:pos[1]==="r"?width-M-w:(width-w)/2,y:pos[0]==="t"?height-M-h:M,width:w,height:h})});
     }
     if(tool==="crop"){
       const m=parseFloat(val("m"));if(!(m>0))throw new Error("Kesilecek miktarı gir (pt).");
@@ -273,24 +586,27 @@ async function run(){
   return {data,note:pct>0?" · %"+pct+" küçüldü":" · Boyut küçülmedi; zaten verimli bir PDF olabilir"};
 }
 
+async function save(name,blob){
+  if(window.claude&&!dl)dl=await claude.use("downloads");
+  if(dl)return dl.save({filename:name,data:blob});
+  const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);
+}
 $("go").onclick=async()=>{
   $("go").disabled=true;msg("İşleniyor…");
   try{
     const r=await run(),name=r.name||TOOLS[tool].out,type=r.type||(r.data instanceof Blob?r.data.type:"application/pdf");
     const blob=r.data instanceof Blob?r.data:new Blob([r.data],{type});
-    if(!dl)dl=await (window.claude?claude.use("downloads"):null);
-    if(!dl){msg("Bu görünümde dosya kaydetme kullanılamıyor. Sayfayı claude.ai’da açmayı dene.",true);return}
-    await dl.save({filename:name,data:blob});
+    await save(name,blob);
     msg("Hazır: "+name+" ("+size(blob.size)+")"+(r.note||""));
   }catch(e){
     if(e&&e.code==="declined")msg("Kaydetme iptal edildi.");
-    else if(e&&/encrypt/i.test(e.message||""))msg("Bu PDF şifreli; şifreli dosyalar desteklenmiyor.",true);
+    else if(e&&(/encrypt/i.test(e.message||"")||e.name==="PasswordException"))msg("Bu PDF şifreli. Önce “Kilidi aç” aracıyla parolayı kaldır.",true);
     else msg(e&&e.message?e.message:"İşlem başarısız oldu. Dosya bozuk olabilir.",true);
   }finally{$("go").disabled=!files.length}
 };
-const CATS={org:["Sayfaları düzenle","#E5322D"],opt:["Optimize et","#16A34A"],cvt:["Dönüştür","#E58A00"],edt:["PDF’yi düzenle","#7C5CFC"]};
-const KIND={merge:"org",split:"org",remove:"org",organize:"org",compress:"opt",img:"cvt",pdf2jpg:"cvt",pdf2txt:"cvt",rotate:"edt",numbers:"edt",watermark:"edt",crop:"edt"};
-const IC={merge:"M4 4h10v10H4zM10 10h10v10H10z",split:"M12 3v18M5 8l-2 4 2 4M19 8l2 4-2 4",remove:"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13",organize:"M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3",rotate:"M20 12a8 8 0 1 1-3-6.3M20 4v5h-5",numbers:"M9 4L7 20M17 4l-2 16M4 9h17M3 15h17",watermark:"M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z",crop:"M6 2v16h16M2 6h16v16",img:"M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4",pdf2jpg:"M12 4v11M7 10l5 5 5-5M5 20h14",pdf2txt:"M5 5h14M5 10h14M5 15h14M5 20h8",compress:"M4 4l6 6M10 5v5H5M20 20l-6-6M14 19v-5h5"};
+const CATS={org:["Sayfaları düzenle","#E5322D"],opt:["Optimize et","#16A34A"],cvt:["Dönüştür","#E58A00"],edt:["PDF’yi düzenle","#7C5CFC"],sec:["Güvenlik","#2563EB"]};
+const KIND={merge:"org",split:"org",remove:"org",organize:"org",compress:"opt",repair:"opt",img:"cvt",pdf2word:"cvt",word2pdf:"cvt",pdf2ppt:"cvt",pdf2jpg:"cvt",pdf2xls:"cvt",xls2pdf:"cvt",pdf2txt:"cvt",rotate:"edt",numbers:"edt",watermark:"edt",text:"edt",crop:"edt",sign:"sec",protect:"sec",unlock:"sec"};
+const IC={pdf2word:"M5 3h10l4 4v14H5zM8 10l1.5 6L12 11l2.5 5L16 10",word2pdf:"M3 4h11v14H3zM5.5 8l1 5 1.5-3.5 1.5 3.5 1-5M15 18h6M18 15l3 3-3 3",pdf2ppt:"M3 5h18v11H3zM12 16v4M8 20h8M8 13V9h3a2 2 0 0 1 0 4H8",repair:"M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z",sign:"M3 17c3-3 4.5-9 7-9 2 0-1 9 1.5 9 1.6 0 2.5-3 4-3 1.2 0 1 2 2.5 2M3 21h18",protect:"M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11M12 15v2",unlock:"M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 6.8-1.2M12 15v2",text:"M5 6V4h14v2M12 4v16M9 20h6",merge:"M4 4h10v10H4zM10 10h10v10H10z",split:"M12 3v18M5 8l-2 4 2 4M19 8l2 4-2 4",remove:"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13",organize:"M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3",rotate:"M20 12a8 8 0 1 1-3-6.3M20 4v5h-5",numbers:"M9 4L7 20M17 4l-2 16M4 9h17M3 15h17",watermark:"M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z",crop:"M6 2v16h16M2 6h16v16",img:"M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4",pdf2jpg:"M12 4v11M7 10l5 5 5-5M5 20h14",pdf2xls:"M4 4h16v16H4zM4 10h16M4 15h16M10 4v16",xls2pdf:"M3 3h11v11H3zM3 8.5h11M8.5 3v11M15 18h6M18 15l3 3-3 3",pdf2txt:"M5 5h14M5 10h14M5 15h14M5 20h8",compress:"M4 4l6 6M10 5v5H5M20 20l-6-6M14 19v-5h5"};
 const icon=k=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+IC[k]+'"/></svg>';
 function buildHome(){
   const chips=$("chips"),grid=$("grid");
