@@ -632,8 +632,8 @@ const paint=()=>{$("theme").innerHTML=isDark()?SUN:MOON;$("theme").title=isDark(
 try{const sv=localStorage.getItem("pdfatolye-theme");if(sv==="dark"||sv==="light")document.documentElement.dataset.theme=sv}catch(e){}
 $("theme").onclick=()=>{const n=isDark()?"light":"dark";document.documentElement.dataset.theme=n;try{localStorage.setItem("pdfatolye-theme",n)}catch(e){}paint()};
 paint();buildHome();addEventListener("hashchange",route);route();
-<div class="madeby">Made By <b>ArdZor</b></div>
 </script>
+<div class="madeby">Made By <b>ArdZor</b></div>
 </body>
 </html>
 
